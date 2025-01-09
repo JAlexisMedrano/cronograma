@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cronograma de Turnos</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-image: url(https://wallpapers.com/images/featured/negro-3d-bqeujlzpj3p2e505.jpg);
+      color: #e0e0e0;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .cronograma {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: auto;
+      gap: 10px;
+      background-color: rgba(54, 52, 52, 0.6);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .dia {
+      text-align: center;
+      font-weight: bold;
+      background-color: rgba(133, 133, 141, 0.781);
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .turno {
+      background-color: #4caf4f85;
+      color: white;
+      text-align: center;
+      padding: 5px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .turno-2 {
+      background-color: rgba(62, 130, 185, 0.8);
+    }
+
+    .empleado {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      border-radius: 10%;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .nombre-empleado {
+      font-weight: bold;
+      text-align: center;
+      padding: 5px;
+      background-color: rgba(27, 26, 26, 0.644);
+      border-radius: 5px;
+    }
+
+    canvas {
+      margin-top: 30px;
+      width: 300px;
+      height: 150px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    table {
+      width: 40%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      background-color: rgba(54, 52, 52, 0.6);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    th {
+      background-color: #4caf4f85;
+      color: white;
+    }
+
+    td {
+      background-color: rgba(54, 52, 52, 0.6);
+    }
+
+    /* Media Queries para hacer la página responsiva */
+    /* Diseño para pantallas pequeñas */
+@media (max-width: 768px) {
+  .dias-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dia {
+    margin-bottom: 20px;
+  }
+
+  .empleados-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+
+  .empleado {
+    margin: 5px 0;
+  }
+}
+
+
+    @media (max-width: 480px) {
+  .cronograma {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dia {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: rgba(133, 133, 141, 0.781);
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  .empleado {
+    margin: 5px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nombre-empleado {
+    font-weight: bold;
+    background-color: rgba(27, 26, 26, 0.644);
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+
+  .turno {
+    margin-left: 10px;
+    padding: 5px;
+    border-radius: 5px;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Horario Semanal</h1>
+    <div class="cronograma" id="cronograma">
+      <!-- Se llenará dinámicamente con los días y turnos -->
+    </div>
+
+    <h2>Horas Totales</h2>
+    <table id="tablaHoras">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Horas Semanales</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Se llenará dinámicamente con las horas trabajadas por cada empleado -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+  
+    const firebaseConfig = {
+      apiKey: "AIzaSyACRLcbjVyIfdPxocD6gM6hccZieHQHSEQ",
+      authDomain: "organizacion-empleados.firebaseapp.com",
+      databaseURL: "https://organizacion-empleados-default-rtdb.firebaseio.com",
+      projectId: "organizacion-empleados",
+      storageBucket: "organizacion-empleados.firebasestorage.app",
+      messagingSenderId: "653857171257",
+      appId: "1:653857171257:web:f49763a9cbad1e4eab2ae8",
+      measurementId: "G-PM0ND8L2P3"
+    };
+  
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+  
+    function detectarOrientacion() {
+      const mensajeRotacion = document.getElementById('mensajeRotacion');
+      if (window.innerHeight > window.innerWidth) {
+        mensajeRotacion.style.display = 'block';
+      } else {
+        mensajeRotacion.style.display = 'none';
+      }
+    }
+  
+    window.addEventListener('load', detectarOrientacion);
+    window.addEventListener('resize', detectarOrientacion);
+  
+    function obtenerDatos() {
+      const referencia = ref(database, 'horarios/');
+      get(referencia).then((snapshot) => {
+        const datos = snapshot.val();
+        if (datos) {
+          mostrarCronograma(datos);
+          calcularHoras(datos);
+        } else {
+          alert('No hay datos disponibles');
+        }
+      }).catch((error) => {
+        console.error('Error al obtener los datos:', error);
+      });
+    }
+  
+    function ordenarPorDia(datos) {
+      const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      return Object.values(datos).flatMap(empleado => {
+        return Object.values(empleado).filter(horariosDia => dias.includes(horariosDia.dia))
+          .sort((a, b) => dias.indexOf(a.dia) - dias.indexOf(b.dia));
+      });
+    }
+  
+    function mostrarCronograma(datos) {
+      const cronograma = document.getElementById('cronograma');
+      cronograma.innerHTML = '';
+  
+      const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      dias.forEach(dia => {
+        const diaDiv = document.createElement('div');
+        diaDiv.classList.add('dia');
+        diaDiv.innerHTML = dia;
+        cronograma.appendChild(diaDiv);
+      });
+  
+      const datosOrdenados = ordenarPorDia(datos);
+      const filaTurnos = Array.from({ length: dias.length }, () => []);
+  
+      datosOrdenados.forEach(horariosDia => {
+        dias.forEach((dia, index) => {
+          if (horariosDia.dia === dia) {
+            const turnoDiv = document.createElement('div');
+            turnoDiv.classList.add('empleado');
+  
+            const nombreEmpleado = document.createElement('div');
+            nombreEmpleado.classList.add('nombre-empleado');
+            nombreEmpleado.innerHTML = horariosDia.nombre;
+            turnoDiv.appendChild(nombreEmpleado);
+  
+            if (horariosDia.turno1_inicio && horariosDia.turno1_fin) {
+              const turno1 = document.createElement('div');
+              turno1.classList.add('turno');
+              turno1.innerHTML = `${horariosDia.turno1_inicio} - ${horariosDia.turno1_fin}`;
+              turnoDiv.appendChild(turno1);
+            }
+  
+            if (horariosDia.turno2_inicio && horariosDia.turno2_fin) {
+              const turno2 = document.createElement('div');
+              turno2.classList.add('turno', 'turno-2');
+              turno2.innerHTML = `${horariosDia.turno2_inicio} - ${horariosDia.turno2_fin}`;
+              turnoDiv.appendChild(turno2);
+            }
+  
+            filaTurnos[index].push(turnoDiv);
+          }
+        });
+      });
+  
+      filaTurnos.forEach((turnos, index) => {
+        turnos.forEach(turno => {
+          cronograma.appendChild(turno);
+        });
+      });
+    }
+  
+    function calcularHoras(datos) {
+      const tablaHoras = document.getElementById('tablaHoras').getElementsByTagName('tbody')[0];
+      tablaHoras.innerHTML = '';
+  
+      const horasPorEmpleado = {};
+  
+      Object.values(datos).forEach(empleado => {
+        Object.values(empleado).forEach(horariosDia => {
+          const nombre = horariosDia.nombre;
+          const turno1Horas = calcularHorasTurno(horariosDia.turno1_inicio, horariosDia.turno1_fin);
+          const turno2Horas = calcularHorasTurno(horariosDia.turno2_inicio, horariosDia.turno2_fin);
+  
+          if (!horasPorEmpleado[nombre]) {
+            horasPorEmpleado[nombre] = 0;
+          }
+  
+          horasPorEmpleado[nombre] += turno1Horas + turno2Horas;
+        });
+      });
+  
+      const horasOrdenadas = Object.entries(horasPorEmpleado)
+        .map(([nombre, horas]) => ({ nombre, horas }))
+        .sort((a, b) => b.horas - a.horas);
+  
+      horasOrdenadas.forEach(({ nombre, horas }) => {
+        const fila = document.createElement('tr');
+        const celdaNombre = document.createElement('td');
+        celdaNombre.textContent = nombre;
+  
+        const celdaHoras = document.createElement('td');
+        celdaHoras.textContent = horas.toFixed(2);
+  
+        fila.appendChild(celdaNombre);
+        fila.appendChild(celdaHoras);
+        tablaHoras.appendChild(fila);
+      });
+    }
+  
+    function calcularHorasTurno(inicio, fin) {
+      if (!inicio || !fin) return 0;
+  
+      const [horaInicio, minutoInicio] = inicio.split(':').map(Number);
+      const [horaFin, minutoFin] = fin.split(':').map(Number);
+  
+      const fechaInicio = new Date(0, 0, 0, horaInicio, minutoInicio);
+      const fechaFin = new Date(0, 0, 0, horaFin, minutoFin);
+  
+      if (fechaFin < fechaInicio) {
+        fechaFin.setDate(fechaFin.getDate() + 1);
+      }
+  
+      return (fechaFin - fechaInicio) / (1000 * 60 * 60);
+    }
+  
+    obtenerDatos();
+  </script>
+  
+
+</body>
+</html>
