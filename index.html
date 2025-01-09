@@ -25,7 +25,7 @@
       grid-template-columns: repeat(7, 1fr);
       grid-template-rows: auto;
       gap: 10px;
-      background-color: rgba(54, 52, 52, 0.6);
+      background-color: rgba(19, 16, 16, 0.534);
       padding: 10px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
@@ -34,7 +34,7 @@
     .dia {
       text-align: center;
       font-weight: bold;
-      background-color: rgba(133, 133, 141, 0.781);
+      background-color: rgba(54, 52, 52, 0.6);
       padding: 10px;
       border-radius: 5px;
     }
@@ -202,6 +202,7 @@ if (screen.orientation && screen.orientation.lock) {
         console.error('Error al obtener los datos:', error);
       });
     }
+    
   
     function ordenarPorDia(datos) {
       const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -210,58 +211,93 @@ if (screen.orientation && screen.orientation.lock) {
           .sort((a, b) => dias.indexOf(a.dia) - dias.indexOf(b.dia));
       });
     }
+    // Función para ordenar los turnos de cada día por el horario de inicio del turno 1
+  function ordenarTurnosPorHorario(turnos) {
+    return turnos.sort((a, b) => {
+      const turno1A = a.querySelector('.turno').innerText.split(' - ')[0];
+      const turno1B = b.querySelector('.turno').innerText.split(' - ')[0];
+      return turno1A.localeCompare(turno1B);
+    });
+  }
+    
   
-    function mostrarCronograma(datos) {
-      const cronograma = document.getElementById('cronograma');
-      cronograma.innerHTML = '';
-  
-      const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-      dias.forEach(dia => {
-        const diaDiv = document.createElement('div');
-        diaDiv.classList.add('dia');
-        diaDiv.innerHTML = dia;
-        cronograma.appendChild(diaDiv);
-      });
-  
-      const datosOrdenados = ordenarPorDia(datos);
-      const filaTurnos = Array.from({ length: dias.length }, () => []);
-  
-      datosOrdenados.forEach(horariosDia => {
-        dias.forEach((dia, index) => {
-          if (horariosDia.dia === dia) {
-            const turnoDiv = document.createElement('div');
-            turnoDiv.classList.add('empleado');
-  
-            const nombreEmpleado = document.createElement('div');
-            nombreEmpleado.classList.add('nombre-empleado');
-            nombreEmpleado.innerHTML = horariosDia.nombre;
-            turnoDiv.appendChild(nombreEmpleado);
-  
-            if (horariosDia.turno1_inicio && horariosDia.turno1_fin) {
-              const turno1 = document.createElement('div');
-              turno1.classList.add('turno');
-              turno1.innerHTML = `${horariosDia.turno1_inicio} - ${horariosDia.turno1_fin}`;
-              turnoDiv.appendChild(turno1);
-            }
-  
-            if (horariosDia.turno2_inicio && horariosDia.turno2_fin) {
-              const turno2 = document.createElement('div');
-              turno2.classList.add('turno', 'turno-2');
-              turno2.innerHTML = `${horariosDia.turno2_inicio} - ${horariosDia.turno2_fin}`;
-              turnoDiv.appendChild(turno2);
-            }
-  
-            filaTurnos[index].push(turnoDiv);
-          }
-        });
-      });
-  
-      filaTurnos.forEach((turnos, index) => {
-        turnos.forEach(turno => {
-          cronograma.appendChild(turno);
-        });
-      });
+    // Función para mostrar el cronograma
+  function mostrarCronograma(datos) {
+    const cronograma = document.getElementById('cronograma');
+    cronograma.innerHTML = ''; // Limpiar el cronograma antes de mostrar nuevos datos
+
+    // Crear las cabeceras de los días
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+    // Agregar los días a la cabecera
+    dias.forEach(dia => {
+      const diaDiv = document.createElement('div');
+      diaDiv.classList.add('dia');
+      diaDiv.innerHTML = dia;
+      cronograma.appendChild(diaDiv);
+    });
+
+    // Ordenar los datos por día
+    const datosOrdenados = ordenarPorDia(datos);
+
+    // Crear una fila para los turnos de cada día
+    const filaTurnos = [];
+    for (let i = 0; i < dias.length; i++) {
+      filaTurnos.push([]);
     }
+
+    // Iterar sobre los empleados y sus horarios
+    datosOrdenados.forEach(horariosDia => {
+      // Iterar sobre los días
+      dias.forEach((dia, index) => {
+        if (horariosDia.dia === dia) {
+          const turnoDiv = document.createElement('div');
+          turnoDiv.classList.add('empleado');
+
+          // Agregar el nombre del empleado
+          const nombreEmpleado = document.createElement('div');
+          nombreEmpleado.classList.add('nombre-empleado');
+          nombreEmpleado.innerHTML = horariosDia.nombre;
+          turnoDiv.appendChild(nombreEmpleado);
+
+          // Mostrar turno 1
+          if (horariosDia.turno1_inicio && horariosDia.turno1_fin) {
+            const turno1 = document.createElement('div');
+            turno1.classList.add('turno');
+            turno1.innerHTML = `${horariosDia.turno1_inicio} - ${horariosDia.turno1_fin}`;
+            turnoDiv.appendChild(turno1);
+          }
+
+          // Mostrar turno 2 si existe
+          if (horariosDia.turno2_inicio && horariosDia.turno2_fin) {
+            const turno2 = document.createElement('div');
+            turno2.classList.add('turno', 'turno-2');
+            turno2.innerHTML = `${horariosDia.turno2_inicio} - ${horariosDia.turno2_fin}`;
+            turnoDiv.appendChild(turno2);
+          }
+
+          // Agregar el turno del empleado a la fila correspondiente
+          filaTurnos[index].push(turnoDiv);
+        }
+      });
+    });
+
+    // Insertar los turnos de cada día en la cuadrícula
+    for (let i = 0; i < dias.length; i++) {
+      const diaDiv = document.createElement('div');
+      diaDiv.classList.add('dia');
+
+      // Ordenar los turnos de cada día por el horario de inicio del turno 1
+      const turnosOrdenados = ordenarTurnosPorHorario(filaTurnos[i]);
+      
+      // Agregar los turnos ordenados al día correspondiente
+      turnosOrdenados.forEach(turno => {
+        diaDiv.appendChild(turno);
+      });
+
+      cronograma.appendChild(diaDiv);
+    }
+  }
   
     function calcularHoras(datos) {
       const tablaHoras = document.getElementById('tablaHoras').getElementsByTagName('tbody')[0];
