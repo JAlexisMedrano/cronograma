@@ -105,70 +105,26 @@
     /* Media Queries para hacer la página responsiva */
     /* Diseño para pantallas pequeñas */
 @media (max-width: 768px) {
-  .dias-container {
-    display: flex;
-    flex-direction: column;
+  *{
+    background-color: black;
+  }
+  #mensajeRotacion{
+    display: block;
+  }
+  body .container{
+    display: none;
   }
 
-  .dia {
-    margin-bottom: 20px;
-  }
-
-  .empleados-container {
-    display: flex;
-    flex-direction: column;
-    margin-top: 10px;
-  }
-
-  .empleado {
-    margin: 5px 0;
-  }
-}
-
-
-    @media (max-width: 480px) {
-  .cronograma {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .dia {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background-color: rgba(133, 133, 141, 0.781);
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-  }
-
-  .empleado {
-    margin: 5px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .nombre-empleado {
-    font-weight: bold;
-    background-color: rgba(27, 26, 26, 0.644);
-    padding: 5px;
-    border-radius: 5px;
-    margin-bottom: 5px;
-  }
-
-  .turno {
-    margin-left: 10px;
-    padding: 5px;
-    border-radius: 5px;
-  }
 }
 
   </style>
 </head>
 <body>
-
+    <div id="mensajeRotacion" style="display: none; text-align: center; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 20px; position: fixed; top: 15%; left: 0; width: 90%; height: 100%; z-index: 9999;">
+        <h2>Por favor, rota tu dispositivo para poder visualizar correctamente los horarios 😉</h2>
+        <img src="https://centrogabo.org/especiales/gabriel-garcia-marquez//themes/custom/gabo_theme/image/icono-rotar.gif" alt="Rotar teléfono">
+      </div>
+      
   <div class="container">
     <h1>Horario Semanal</h1>
     <div class="cronograma" id="cronograma">
@@ -211,17 +167,26 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
   
-    function detectarOrientacion() {
-      const mensajeRotacion = document.getElementById('mensajeRotacion');
-      if (window.innerHeight > window.innerWidth) {
-        mensajeRotacion.style.display = 'block';
-      } else {
-        mensajeRotacion.style.display = 'none';
-      }
-    }
-  
-    window.addEventListener('load', detectarOrientacion);
-    window.addEventListener('resize', detectarOrientacion);
+   function detectarOrientacion() {
+  const mensajeRotacion = document.getElementById('mensajeRotacion');
+  if (window.innerHeight > window.innerWidth) {
+    mensajeRotacion.style.display = 'block';
+  } else {
+    mensajeRotacion.style.display = 'none';
+  }
+}
+
+// Agregar evento para detectar cambios en el tamaño de la ventana
+window.addEventListener('load', detectarOrientacion);
+window.addEventListener('resize', detectarOrientacion);
+
+// Forzar orientación horizontal en dispositivos móviles
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock("landscape").catch(err => {
+    console.warn("No se pudo bloquear la orientación:", err);
+  });
+}
+
   
     function obtenerDatos() {
       const referencia = ref(database, 'horarios/');
